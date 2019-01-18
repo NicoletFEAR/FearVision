@@ -73,12 +73,19 @@ std::vector<TargetInfo> processImpl(int w, int h, int texOut, DisplayMode mode,
 
     if (cv::isContourConvex(convex_contour)) {
       TargetInfo target;
+
+      cv::RotatedRect minRect = minAreaRect(convex_contour); // ANGLED
       cv::Rect bounding_rect = cv::boundingRect(convex_contour);
-      target.centroid_x = bounding_rect.x + (bounding_rect.width / 2);
+
+      cv::Point2f centerMinRect = minRect.center;
+        LOGD("test %.21f", centerMinRect);
+
+      target.centroid_x = centerMinRect.x;// + (bounding_rect.width / 2);
       // centroid Y is top of target because it changes shape as you move
-      target.centroid_y = bounding_rect.y + bounding_rect.height;
-      target.width = bounding_rect.width;
-      target.height = bounding_rect.height;
+
+      target.centroid_y = centerMinRect.y;// + bounding_rect.height;
+      target.width = minRect.size.width;//bounding_rect.width;
+      target.height = minRect.size.height;
       target.points = convex_contour;
 
       // Filter based on size
