@@ -24,6 +24,7 @@ struct TargetInfo {
   double centroid_y;
   double width;
   double height;
+  double angle;
   std::vector<cv::Point> points;
 };
 
@@ -78,7 +79,7 @@ std::vector<TargetInfo> processImpl(int w, int h, int texOut, DisplayMode mode,
       cv::Rect bounding_rect = cv::boundingRect(convex_contour);
 
       cv::Point2f centerMinRect = minRect.center;
-        LOGD("test %.21f", centerMinRect);
+
 
       target.centroid_x = centerMinRect.x;// + (bounding_rect.width / 2);
       // centroid Y is top of target because it changes shape as you move
@@ -87,6 +88,10 @@ std::vector<TargetInfo> processImpl(int w, int h, int texOut, DisplayMode mode,
       target.width = minRect.size.width;//bounding_rect.width;
       target.height = minRect.size.height;
       target.points = convex_contour;
+
+
+        LOGD("target width : %.2lf", target.width); // double
+        LOGD("target height : %.2lf", target.height); // double
 
       // Filter based on size
       // Keep in mind width/height are in imager terms...
@@ -104,8 +109,8 @@ std::vector<TargetInfo> processImpl(int w, int h, int texOut, DisplayMode mode,
       }
 
       // Filter based on shape
-      const double kMaxWideness = 7.0;
-      const double kMinWideness = 1.5;
+      const double kMaxWideness = 10.0;
+      const double kMinWideness = 0.5;
       double wideness = target.width / target.height;
       if (wideness < kMinWideness || wideness > kMaxWideness) {
         LOGD("Rejecting target due to shape : %.2lf", wideness);
@@ -115,7 +120,7 @@ std::vector<TargetInfo> processImpl(int w, int h, int texOut, DisplayMode mode,
 
       //Filter based on fullness
       const double kMinFullness = .45;
-      const double kMaxFullness = .95;
+      const double kMaxFullness = 1;
       double original_contour_area = cv::contourArea(convex_contour);
       double area = target.width * target.height * 1.0;
       double fullness = original_contour_area / area;
@@ -125,13 +130,19 @@ std::vector<TargetInfo> processImpl(int w, int h, int texOut, DisplayMode mode,
         continue;
       }
 
+        // angle of RotatedRect
+        target.angle = minRect.angle;
+        LOGD("target angle : %.2lf", target.angle);
+
       // We found a target
-      LOGD("Found target at %.2lf, %.2lf %.2lf, %.2lf",
-           target.centroid_x, target.centroid_y, target.width, target.height);
+      LOGD("Found target at %.2lf, %.2lf %.2lf, %.2lf, angle %.2lf",
+           target.centroid_x, target.centroid_y, target.width, target.height, target.angle);
       accepted_targets.push_back(std::move(target));
     }
   }
   LOGD("Contour analysis costs %d ms", getTimeInterval(t));
+
+
 
 
   const double kMaxOffset = 10;
