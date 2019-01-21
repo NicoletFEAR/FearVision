@@ -25,6 +25,8 @@ struct TargetInfo {
   double width;
   double height;
   double angle;
+  double center_centroid_x;
+  double center_centroid_y;
   std::vector<cv::Point> points;
 };
 
@@ -167,6 +169,10 @@ std::vector<TargetInfo> processImpl(int w, int h, int texOut, DisplayMode mode,
       if (offset < kMaxOffset) {
         TargetInfo leftTarget = targetI.centroid_x < targetJ.centroid_x ? targetI : targetJ;
         TargetInfo rightTarget = targetI.centroid_x > targetJ.centroid_x ? targetI : targetJ;
+
+        leftTarget.center_centroid_x = (rightTarget.centroid_x - leftTarget.centroid_x) / 2.0;
+        leftTarget.center_centroid_y = (rightTarget.centroid_y - leftTarget.centroid_y) / 2.0;
+
         if (leftTarget.height > rightTarget.height) {
           targets.push_back(std::move(leftTarget));
           found = true;
@@ -191,6 +197,10 @@ std::vector<TargetInfo> processImpl(int w, int h, int texOut, DisplayMode mode,
       cv::polylines(vis, target.points, true, cv::Scalar(0, 112, 255), 3);
       cv::circle(vis, cv::Point(target.centroid_x, target.centroid_y), 4,
                  cv::Scalar(255, 50, 255), 3);
+      if (target.center_centroid_x > 0.0 and target.center_centroid_z > 0.0){
+        cv::circle(vis, cv::Point(target.center_centroid_x, target.center_centroid_y), 4,
+                       cv::Scalar(255, 50, 255), 3);
+      }
     }
   }
   if (mode == DISP_MODE_TARGETS_PLUS) {
@@ -256,9 +266,11 @@ extern "C" void processFrame(JNIEnv *env, int tex1, int tex2, int w, int h,
   for (int i = 0; i < std::min(numTargets, 3); ++i) {
     jobject targetObject = env->GetObjectArrayElement(targetsArray, i);
     const auto &target = targets[i];
-    env->SetDoubleField(targetObject, sCentroidXField, target.centroid_x);
-    env->SetDoubleField(targetObject, sCentroidYField, target.centroid_y);
-    env->SetDoubleField(targetObject, sWidthField, target.width);
-    env->SetDoubleField(targetObject, sHeightField, target.height);
+    if (target.center_centroid_x > 0.0 and target.center_centroid_y > 0.0){
+        env->SetDoubleField(targetObject, sCentroidXField, target.center_centroid_x);
+        env->SetDoubleField(targetObject, sCentroidYField, target.center_centroid_y);
+        env->SetDoubleField(targetObject, sWidthField, target.width); // only applies to the left target
+        env->SetDoubleField(targetObject, sHeightField, target.height); // only applies to the left target
+    }
   }
 }
