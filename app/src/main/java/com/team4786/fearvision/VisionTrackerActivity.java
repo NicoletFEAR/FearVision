@@ -29,12 +29,14 @@ import android.view.animation.Animation;
 import android.view.animation.LinearInterpolator;
 import android.view.animation.ScaleAnimation;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.support.v4.app.ActivityCompat;
 
+import com.team4786.fearvision.comm.RobotConnection;
 import com.team4786.fearvision.comm.RobotConnectionStateListener;
 import com.team4786.fearvision.comm.RobotConnectionStatusBroadcastReceiver;
 
@@ -47,7 +49,8 @@ public class VisionTrackerActivity extends Activity implements RobotConnectionSt
     private static final int REQUEST_CAMERA_PERMISSION = 1;
     private static final String FRAGMENT_DIALOG = "dialog";
 
-    private static boolean sLocked = true;
+
+    private static boolean sLocked = false;
 
     private VisionTrackerGLSurfaceView mView;
     private TextView mProcMode;
@@ -480,6 +483,9 @@ public class VisionTrackerActivity extends Activity implements RobotConnectionSt
 
     public void setLockOn() {
         sLocked = true;
+        View view = getLayoutInflater().inflate(R.layout.hsv_bottom_sheet, null);
+        EditText portText = (EditText) view.findViewById(R.id.editText);
+        RobotConnection.K_ROBOT_PORT = Integer.parseInt(portText.getText().toString());
         mLockButton.setImageResource(R.drawable.locked);
         mLockButton.clearAnimation();
         mLockButton.setBackgroundColor(Color.TRANSPARENT);

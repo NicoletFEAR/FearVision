@@ -24,6 +24,7 @@ struct TargetInfo {
   double centroid_y;
   double width;
   double height;
+  double angle;
   std::vector<cv::Point> points;
 };
 
@@ -73,20 +74,39 @@ std::vector<TargetInfo> processImpl(int w, int h, int texOut, DisplayMode mode,
 
     if (cv::isContourConvex(convex_contour)) {
       TargetInfo target;
+
+      cv::RotatedRect minRect = minAreaRect(convex_contour); // ANGLED
       cv::Rect bounding_rect = cv::boundingRect(convex_contour);
-      target.centroid_x = bounding_rect.x + (bounding_rect.width / 2);
+
+      cv::Point2f centerMinRect = minRect.center;
+
+
+      target.centroid_x = centerMinRect.x;// + (bounding_rect.width / 2);
       // centroid Y is top of target because it changes shape as you move
-      target.centroid_y = bounding_rect.y + bounding_rect.height;
-      target.width = bounding_rect.width;
-      target.height = bounding_rect.height;
+
+      target.centroid_y = centerMinRect.y;// + bounding_rect.height;
+      target.angle = minRect.angle; // angle (always negative from right side to hirizontal axis)
+
+      if (abs(target.angle) < 44) {
+          target.width = minRect.size.height;//bounding_rect.width;
+          target.height = minRect.size.width;
+      } else {
+          target.width = minRect.size.width;//bounding_rect.width;
+          target.height = minRect.size.height;
+      }
+
       target.points = convex_contour;
+
+
+        LOGD("target width : %.2lf", target.width); // double
+        LOGD("target height : %.2lf", target.height); // double
 
       // Filter based on size
       // Keep in mind width/height are in imager terms...
-      const double kMinTargetWidth = 20;
-      const double kMaxTargetWidth = 300;
-      const double kMinTargetHeight = 6;
-      const double kMaxTargetHeight = 60;
+      const double kMinTargetWidth = 0;
+      const double kMaxTargetWidth = 1000;
+      const double kMinTargetHeight = 0;
+      const double kMaxTargetHeight = 1000;
       if (target.width < kMinTargetWidth || target.width > kMaxTargetWidth ||
           target.height < kMinTargetHeight ||
           target.height > kMaxTargetHeight) {
@@ -97,8 +117,8 @@ std::vector<TargetInfo> processImpl(int w, int h, int texOut, DisplayMode mode,
       }
 
       // Filter based on shape
-      const double kMaxWideness = 7.0;
-      const double kMinWideness = 1.5;
+      const double kMaxWideness = 1000.0;
+      const double kMinWideness = 0;
       double wideness = target.width / target.height;
       if (wideness < kMinWideness || wideness > kMaxWideness) {
         LOGD("Rejecting target due to shape : %.2lf", wideness);
@@ -108,7 +128,7 @@ std::vector<TargetInfo> processImpl(int w, int h, int texOut, DisplayMode mode,
 
       //Filter based on fullness
       const double kMinFullness = .45;
-      const double kMaxFullness = .95;
+      const double kMaxFullness = 1;
       double original_contour_area = cv::contourArea(convex_contour);
       double area = target.width * target.height * 1.0;
       double fullness = original_contour_area / area;
@@ -118,16 +138,23 @@ std::vector<TargetInfo> processImpl(int w, int h, int texOut, DisplayMode mode,
         continue;
       }
 
+        // angle of RotatedRect
+        target.angle = minRect.angle;
+        LOGD("target angle : %.2lf", target.angle);
+
       // We found a target
-      LOGD("Found target at %.2lf, %.2lf %.2lf, %.2lf",
-           target.centroid_x, target.centroid_y, target.width, target.height);
+      LOGD("Found target at %.2lf, %.2lf %.2lf, %.2lf, angle %.2lf",
+           target.centroid_x, target.centroid_y, target.width, target.height, target.angle);
       accepted_targets.push_back(std::move(target));
     }
   }
   LOGD("Contour analysis costs %d ms", getTimeInterval(t));
 
 
-  const double kMaxOffset = 10;
+
+
+  const double kMaxOffset = 1000;
+  const double kMinOffset = 0;
   bool found = false;
   for (int i = 0; !found && i < accepted_targets.size(); i++) {
     for (int j = 0; !found && j < accepted_targets.size(); j++) {
@@ -138,10 +165,11 @@ std::vector<TargetInfo> processImpl(int w, int h, int texOut, DisplayMode mode,
       TargetInfo targetJ = accepted_targets[j];
       double offset = abs(targetI.centroid_x - targetJ.centroid_x);
       if (offset < kMaxOffset) {
-        TargetInfo topTarget = targetI.centroid_y > targetJ.centroid_y ? targetI : targetJ;
-        TargetInfo bottomTarget = targetI.centroid_y < targetJ.centroid_y ? targetI : targetJ;
-        if (topTarget.height > bottomTarget.height) {
-          targets.push_back(std::move(topTarget));
+        TargetInfo leftTarget = targetI.centroid_x < targetJ.centroid_x ? targetI : targetJ;
+        TargetInfo rightTarget = targetI.centroid_x < targetJ.centroid_x ? targetJ : targetI;
+        if (abs(leftTarget.angle) > abs(rightTarget.angle)) {
+          targets.push_back(std::move(leftTarget));
+          targets.push_back(std::move(rightTarget));
           found = true;
           break;
         }
@@ -191,6 +219,7 @@ static jfieldID sCentroidXField;
 static jfieldID sCentroidYField;
 static jfieldID sWidthField;
 static jfieldID sHeightField;
+static jfieldID sAngleField;
 
 static void ensureJniRegistered(JNIEnv *env) {
   if (sFieldsRegistered) {
@@ -210,6 +239,7 @@ static void ensureJniRegistered(JNIEnv *env) {
   sCentroidYField = env->GetFieldID(targetClass, "centroidY", "D");
   sWidthField = env->GetFieldID(targetClass, "width", "D");
   sHeightField = env->GetFieldID(targetClass, "height", "D");
+  sAngleField = env->GetFieldID(targetClass, "angle", "D");
 }
 
 extern "C" void processFrame(JNIEnv *env, int tex1, int tex2, int w, int h,
@@ -219,6 +249,9 @@ extern "C" void processFrame(JNIEnv *env, int tex1, int tex2, int w, int h,
   auto targets = processImpl(w, h, tex2, static_cast<DisplayMode>(mode), h_min,
                              h_max, s_min, s_max, v_min, v_max);
   int numTargets = targets.size();
+  //double center_x = ( (targets[numTargets - 1]).centroid_x + (targets[numTargets - 2]).centroid_x)/2;
+
+        LOGD("center_x : %.2lf", center_x);
   ensureJniRegistered(env);
   env->SetIntField(destTargetInfo, sNumTargetsField, numTargets);
   if (numTargets == 0) {
@@ -233,5 +266,6 @@ extern "C" void processFrame(JNIEnv *env, int tex1, int tex2, int w, int h,
     env->SetDoubleField(targetObject, sCentroidYField, target.centroid_y);
     env->SetDoubleField(targetObject, sWidthField, target.width);
     env->SetDoubleField(targetObject, sHeightField, target.height);
+    env->SetDoubleField(targetObject, sAngleField, target.angle);
   }
 }

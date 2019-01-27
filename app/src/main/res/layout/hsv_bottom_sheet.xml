@@ -1,98 +1,122 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:rsb="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/popup_window"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_gravity="bottom|center"
     android:background="@android:color/white"
-    android:padding="10dp"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:padding="10dp">
 
 
     <LinearLayout
-        android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:orientation="horizontal"
         android:padding="5dp">
 
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="H"
             android:id="@+id/hLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingTop="23dp"
             android:paddingRight="10dp"
-            android:paddingTop="23dp" />
+            android:text="H"
+            android:textAppearance="?android:attr/textAppearanceLarge" />
 
         <org.florescu.android.rangeseekbar.RangeSeekBar
+            android:id="@+id/hSeekBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
             rsb:absoluteMaxValue="255"
             rsb:absoluteMinValue="0"
-            rsb:textAboveThumbsColor="@android:color/holo_blue_dark"
             rsb:showLabels="false"
-            android:layout_gravity="center_vertical"
-            android:id="@+id/hSeekBar" />
+            rsb:textAboveThumbsColor="@android:color/holo_blue_dark" />
+
     </LinearLayout>
 
     <LinearLayout
-        android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:orientation="horizontal"
         android:padding="5dp">
 
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="S"
             android:id="@+id/sLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingTop="23dp"
             android:paddingRight="10dp"
-            android:paddingTop="23dp" />
+            android:text="S"
+            android:textAppearance="?android:attr/textAppearanceLarge" />
 
         <org.florescu.android.rangeseekbar.RangeSeekBar
+            android:id="@+id/sSeekBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
             rsb:absoluteMaxValue="255"
             rsb:absoluteMinValue="0"
-            rsb:textAboveThumbsColor="@android:color/holo_blue_dark"
             rsb:showLabels="false"
-            android:layout_gravity="center_vertical"
-            android:id="@+id/sSeekBar" />
+            rsb:textAboveThumbsColor="@android:color/holo_blue_dark" />
     </LinearLayout>
 
     <LinearLayout
-        android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:orientation="horizontal"
         android:padding="5dp">
 
         <TextView
+            android:id="@+id/vLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="V"
-            android:id="@+id/vLabel"
+            android:paddingTop="23dp"
             android:paddingRight="10dp"
-            android:paddingTop="23dp" />
+            android:text="V"
+            android:textAppearance="?android:attr/textAppearanceLarge" />
 
         <org.florescu.android.rangeseekbar.RangeSeekBar
+            android:id="@+id/vSeekBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
             rsb:absoluteMaxValue="255"
             rsb:absoluteMinValue="0"
-            rsb:textAboveThumbsColor="@android:color/holo_blue_dark"
             rsb:showLabels="false"
-            android:layout_gravity="center_vertical"
-            android:id="@+id/vSeekBar" />
+            rsb:textAboveThumbsColor="@android:color/holo_blue_dark" />
+
     </LinearLayout>
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Restore Defaults"
-        android:id="@+id/restoreDefaultsButton"
-        android:layout_gravity="center_horizontal" />
+    <RelativeLayout
+        android:layout_width="572dp"
+        android:layout_height="64dp">
+
+        <Button
+            android:id="@+id/restoreDefaultsButton"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_alignParentTop="true"
+            android:layout_gravity="right"
+            android:layout_marginStart="243dp"
+            android:layout_marginTop="0dp"
+            android:gravity="right|center_vertical"
+            android:text="Restore Defaults" />
+
+        <EditText
+            android:id="@+id/editText"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentBottom="true"
+            android:layout_marginStart="0dp"
+            android:layout_marginBottom="0dp"
+            android:ems="10"
+            android:inputType="number"
+            android:text="Port" />
+    </RelativeLayout>
 
 </LinearLayout>
