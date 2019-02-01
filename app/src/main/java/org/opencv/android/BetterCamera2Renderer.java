@@ -15,6 +15,7 @@ import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraManager;
+import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.os.Handler;
@@ -273,9 +274,13 @@ public class BetterCamera2Renderer extends BetterCameraGLRendererBase {
                         public void onConfigured(CameraCaptureSession cameraCaptureSession) {
                             mCaptureSession = cameraCaptureSession;
                             try {
-                                for (Map.Entry<CaptureRequest.Key, ?> setting : mSettings.camera_settings.entrySet()) {
-                                    mPreviewRequestBuilder.set(setting.getKey(), setting.getValue());
-                                }
+//                                for (Map.Entry<CaptureRequest.Key, ?> setting : mSettings.camera_settings.entrySet()) {
+//                                    mPreviewRequestBuilder.set(setting.getKey(), setting.getValue());
+//                                }
+                                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_LOCK, false);
+                                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CameraMetadata.CONTROL_AE_MODE_ON);
+                                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
+
                                 mCaptureSession.setRepeatingRequest(mPreviewRequestBuilder.build(), mCaptureCallback, mBackgroundHandler);
                                 Log.i(LOGTAG, "CameraPreviewSession has been started");
                             } catch (CameraAccessException e) {
