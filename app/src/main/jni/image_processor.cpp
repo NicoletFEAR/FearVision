@@ -117,8 +117,8 @@ std::vector<TargetInfo> processImpl(int w, int h, int texOut, DisplayMode mode,
       }
 
       // Filter based on shape
-      const double kMaxWideness = 1000.0;
-      const double kMinWideness = 0;
+      const double kMaxWideness = 20;
+      const double kMinWideness = 0.05;
       double wideness = target.width / target.height;
       if (wideness < kMinWideness || wideness > kMaxWideness) {
         LOGD("Rejecting target due to shape : %.2lf", wideness);
@@ -127,7 +127,7 @@ std::vector<TargetInfo> processImpl(int w, int h, int texOut, DisplayMode mode,
       }
 
       //Filter based on fullness
-      const double kMinFullness = .45;
+      const double kMinFullness = .9;
       const double kMaxFullness = 1;
       double original_contour_area = cv::contourArea(convex_contour);
       double area = target.width * target.height * 1.0;
@@ -143,8 +143,7 @@ std::vector<TargetInfo> processImpl(int w, int h, int texOut, DisplayMode mode,
         LOGD("target angle : %.2lf", target.angle);
 
       // We found a target
-    //  LOGD("Found target at %.2lf, %.2lf %.2lf, %.2lf, angle %.2lf",
-     //      target.centroid_x, target.centroid_y, target.width, target.height, target.angle);
+      LOGD("Found target at %.2lf, %.2lf %.2lf, %.2lf, angle %.2lf", target.centroid_x, target.centroid_y, target.width, target.height, target.angle);
       accepted_targets.push_back(std::move(target));
     }
   }
@@ -153,7 +152,7 @@ std::vector<TargetInfo> processImpl(int w, int h, int texOut, DisplayMode mode,
 
 
 
-  const double kMaxOffset = 1000;
+  const double kMaxOffset = 50;
   const double kMinOffset = 0;
   bool found = false;
   for (int i = 0; !found && i < accepted_targets.size(); i++) {
@@ -163,16 +162,22 @@ std::vector<TargetInfo> processImpl(int w, int h, int texOut, DisplayMode mode,
       }
       TargetInfo targetI = accepted_targets[i];
       TargetInfo targetJ = accepted_targets[j];
-      double offset = abs(targetI.centroid_x - targetJ.centroid_x);
-      if (offset < kMaxOffset) {
+      double vertOffset = abs(targetI.centroid_y - targetJ.centroid_y);
+      if (vertOffset < kMaxOffset) {
         TargetInfo leftTarget = targetI.centroid_x < targetJ.centroid_x ? targetI : targetJ;
         TargetInfo rightTarget = targetI.centroid_x < targetJ.centroid_x ? targetJ : targetI;
-        if (abs(leftTarget.angle) > abs(rightTarget.angle)) {
+        if (abs(leftTarget.angle) < 45 && abs(rightTarget.angle) > 45) {
           targets.push_back(std::move(leftTarget));
           targets.push_back(std::move(rightTarget));
           found = true;
           break;
+        } else {
+          rejected_targets.push_back(std::move(targetI));
+          rejected_targets.push_back(std::move(targetJ));
         }
+      } else {
+        rejected_targets.push_back(std::move(targetI));
+        rejected_targets.push_back(std::move(targetJ));
       }
     }
   }
