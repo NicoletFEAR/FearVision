@@ -22,6 +22,8 @@ import android.widget.Toast;
 
 import java.util.HashMap;
 
+import static java.lang.Math.sqrt;
+
 public class VisionTrackerGLSurfaceView extends BetterCameraGLSurfaceView implements BetterCameraGLSurfaceView.CameraTextureListener {
 
     static final String LOGTAG = "VTGLSurfaceView";
@@ -137,11 +139,18 @@ public class VisionTrackerGLSurfaceView extends BetterCameraGLSurfaceView implem
             NativePart.TargetsInfo.Target target = targetsInfo.targets[i];
 
             // Convert to a homogeneous 3d vector with x = 1
-            double y = -(target.centroidX - kCenterCol) / getFocalLengthPixels();
+            double focalLength;
+            if (DeviceName.getDeviceName().equalsIgnoreCase("Galaxy S7")) { focalLength = 26; }
+            else if (DeviceName.getDeviceName().equalsIgnoreCase("Nexus 6")) { focalLength = 28; }
+            else { focalLength = 26; }
+
+            double y = (focalLength * 5.85) / (sqrt((target.width * target.width) + (target.height * target.height)));
             double z = (target.centroidY - kCenterRow) / getFocalLengthPixels();
+            double x = ;
+            double angle = ;
             Log.i(LOGTAG, "Target at: " + y + ", " + z);
             visionUpdate.addCameraTargetInfo(
-                    new CameraTargetInfo(y, z));
+                    new CameraTargetInfo(x, y, z, angle));
         }
 
         if (mRobotConnection != null) {

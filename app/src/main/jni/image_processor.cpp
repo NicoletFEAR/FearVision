@@ -156,7 +156,7 @@ std::vector<TargetInfo> processImpl(int w, int h, int texOut, DisplayMode mode,
   const double kMinOffset = 0;
   bool found = false;
   for (int i = 0; !found && i < accepted_targets.size(); i++) {
-    for (int j = 0; !found && j < accepted_targets.size(); j++) {
+    for (int j = i; !found && j < accepted_targets.size(); j++) {
       if (i == j) {
         continue;
       }
@@ -167,8 +167,12 @@ std::vector<TargetInfo> processImpl(int w, int h, int texOut, DisplayMode mode,
         TargetInfo leftTarget = targetI.centroid_x < targetJ.centroid_x ? targetI : targetJ;
         TargetInfo rightTarget = targetI.centroid_x < targetJ.centroid_x ? targetJ : targetI;
         if (abs(leftTarget.angle) < 45 && abs(rightTarget.angle) > 45) {
-          targets.push_back(std::move(leftTarget));
-          targets.push_back(std::move(rightTarget));
+          TargetInfo combinedTarget;
+          combinedTarget.centroid_x = (leftTarget.centroid_x + rightTarget.centroid_x)/2;
+          combinedTarget.centroid_y = (leftTarget.centroid_x + rightTarget.centroid_x)/2;
+          combinedTarget.centroid_x = (leftTarget.centroid_x + rightTarget.centroid_x)/2;
+          //targets.push_back(std::move(leftTarget));
+          //targets.push_back(std::move(rightTarget));
           found = true;
           break;
         } else {
