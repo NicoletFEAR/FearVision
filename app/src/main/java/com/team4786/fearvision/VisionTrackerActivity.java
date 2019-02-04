@@ -39,6 +39,7 @@ import com.team4786.fearvision.comm.RobotConnectionStateListener;
 import com.team4786.fearvision.comm.RobotConnectionStatusBroadcastReceiver;
 
 import org.florescu.android.rangeseekbar.RangeSeekBar;
+import org.opencv.android.CameraBridgeViewBase;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -51,6 +52,7 @@ public class VisionTrackerActivity extends Activity implements RobotConnectionSt
 
     private VisionTrackerGLSurfaceView mView;
     private TextView mProcMode;
+    private TextView mCameraIndex;
     private ImageButton mLockButton, mPrefsButton, mViewTypeButton;
     private TextView mBatteryText;
     private ImageView mChargingIcon;
@@ -87,6 +89,18 @@ public class VisionTrackerActivity extends Activity implements RobotConnectionSt
 //            mLastSelfieLaunch = System.currentTimeMillis();
 //            startActivity(i);
 //        }
+    }
+
+    @Override
+    public void switchCameraFront() {
+        mView.setCameraIndex(CameraBridgeViewBase.CAMERA_ID_FRONT);
+        updateCameraIndexText();
+    }
+
+    @Override
+    public void switchCameraBack() {
+        mView.setCameraIndex(CameraBridgeViewBase.CAMERA_ID_BACK);
+        updateCameraIndexText();
     }
 
     private class PowerStateBroadcastReceiver extends BroadcastReceiver {
@@ -283,10 +297,12 @@ public class VisionTrackerActivity extends Activity implements RobotConnectionSt
         mView.setPreferences(m_prefs);
         TextView tv = (TextView) findViewById(R.id.fps_text_view);
         mProcMode = (TextView) findViewById(R.id.proc_mode_text_view);
+        mCameraIndex = (TextView) findViewById(R.id.camera_index_text_view);
         mView.setProcessingMode(NativePart.DISP_MODE_TARGETS_PLUS);
         runOnUiThread(new Runnable() {
             public void run() {
                 updateProcModeText();
+                updateCameraIndexText();
             }
         });
     }
@@ -555,6 +571,10 @@ public class VisionTrackerActivity extends Activity implements RobotConnectionSt
     private void updateProcModeText() {
         mProcMode.setText("Proc Mode: "
                 + VisionTrackerGLSurfaceView.PROC_MODE_NAMES[mView.getProcessingMode()]);
+    }
+
+    private void updateCameraIndexText() {
+        mCameraIndex.setText("Camera ID: " + mView.getCameraIndex());
     }
 
     public void playAirhorn() {

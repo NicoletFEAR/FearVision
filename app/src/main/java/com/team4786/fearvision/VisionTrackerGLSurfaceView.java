@@ -146,8 +146,8 @@ public class VisionTrackerGLSurfaceView extends BetterCameraGLSurfaceView implem
 
             double y = (focalLength * 5.85) / (sqrt((target.width * target.width) + (target.height * target.height)));
             double z = (target.centroidY - kCenterRow) / getFocalLengthPixels();
-            double x = ;
-            double angle = ;
+            double x = 0.0;
+            double angle = 0.0;
             Log.i(LOGTAG, "Target at: " + y + ", " + z);
             visionUpdate.addCameraTargetInfo(
                     new CameraTargetInfo(x, y, z, angle));
