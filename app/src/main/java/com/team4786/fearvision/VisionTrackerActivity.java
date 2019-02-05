@@ -93,12 +93,14 @@ public class VisionTrackerActivity extends Activity implements RobotConnectionSt
 
     @Override
     public void switchCameraFront() {
+        playAirhorn();
         mView.setCameraIndex(CameraBridgeViewBase.CAMERA_ID_FRONT);
         updateCameraIndexText();
     }
 
     @Override
     public void switchCameraBack() {
+        playAirhorn();
         mView.setCameraIndex(CameraBridgeViewBase.CAMERA_ID_BACK);
         updateCameraIndexText();
     }
