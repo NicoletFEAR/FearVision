@@ -169,10 +169,30 @@ std::vector<TargetInfo> processImpl(int w, int h, int texOut, DisplayMode mode,
         if (abs(leftTarget.angle) < 45 && abs(rightTarget.angle) > 45) {
           TargetInfo combinedTarget;
           combinedTarget.centroid_x = (leftTarget.centroid_x + rightTarget.centroid_x)/2;
-          combinedTarget.centroid_y = (leftTarget.centroid_x + rightTarget.centroid_x)/2;
-          combinedTarget.centroid_x = (leftTarget.centroid_x + rightTarget.centroid_x)/2;
-          //targets.push_back(std::move(leftTarget));
+          combinedTarget.centroid_y = (leftTarget.centroid_y + rightTarget.centroid_y)/2;
+          combinedTarget.width = rightTarget.centroid_x - leftTarget.centroid_x;
+          combinedTarget.height = (sqrt(leftTarget.width * leftTarget.width + leftTarget.height + leftTarget.height) + sqrt(rightTarget.width * rightTarget.width + rightTarget.height + rightTarget.height)) / 2;
+          // combinedTarget.angle = 0; // calculated later when sending to RIO
+          if (leftTarget.width > rightTarget.width) { // must be a left turn
+            // multiply by distance
+            // big divided by little
+            combinedTarget.angle =  -(leftTarget.height * leftTarget.width) / (rightTarget.height * rightTarget.width);
+          } else {           // must be a right turn
+            combinedTarget.angle = (rightTarget.height * rightTarget.width) / (leftTarget.height * leftTarget.width);
+            //combinedTarget.angle = (-2);
+
+          }
+          targets.push_back(std::move(combinedTarget));
           //targets.push_back(std::move(rightTarget));
+
+          /*
+          double centroid_x;
+            double centroid_y;
+            double width;
+            double height;
+            double angle;
+          */
+
           found = true;
           break;
         } else {
