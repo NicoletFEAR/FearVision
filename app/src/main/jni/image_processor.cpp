@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <stdlib.h>
+#include <math.h>
 
 #include <GLES2/gl2.h>
 #include <EGL/egl.h>
@@ -173,15 +174,21 @@ std::vector<TargetInfo> processImpl(int w, int h, int texOut, DisplayMode mode,
           combinedTarget.width = rightTarget.centroid_x - leftTarget.centroid_x;
           combinedTarget.height = (sqrt(leftTarget.width * leftTarget.width + leftTarget.height + leftTarget.height) + sqrt(rightTarget.width * rightTarget.width + rightTarget.height + rightTarget.height)) / 2;
           // combinedTarget.angle = 0; // calculated later when sending to RIO
+          /*
           if (leftTarget.width > rightTarget.width) { // must be a left turn
             // multiply by distance
             // big divided by little
-            combinedTarget.angle =  -(leftTarget.height * leftTarget.width) / (rightTarget.height * rightTarget.width);
-          } else {           // must be a right turn
-            combinedTarget.angle = (rightTarget.height * rightTarget.width) / (leftTarget.height * leftTarget.width);
+            combinedTarget.angle =  -(((leftTarget.height * leftTarget.width) / (rightTarget.height * rightTarget.width)) - 10) ;
+          } else {
+            // must be a right turn
+            combinedTarget.angle = ((rightTarget.height * rightTarget.width) / (leftTarget.height * leftTarget.width)) - 10;
             //combinedTarget.angle = (-2);
-
-          }
+          } */
+          combinedTarget.angle = (log(leftTarget.width * leftTarget.height) - log(rightTarget.width * rightTarget.height)) / (log(2));
+          //combinedTarget.angle = combinedTarget.angle * 1;
+          //if (abs(combinedTarget.angle) < 11) {
+          //  combinedTarget.angle = 111;
+          //}
           targets.push_back(std::move(combinedTarget));
           //targets.push_back(std::move(rightTarget));
 

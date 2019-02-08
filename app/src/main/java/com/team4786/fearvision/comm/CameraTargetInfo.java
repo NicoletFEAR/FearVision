@@ -20,7 +20,7 @@ public class CameraTargetInfo {
         m_x = x;
         m_y = y;
         m_z = z;
-        angle = angle;
+        angle = a;
     }
 
     private double doubleize(double value) {

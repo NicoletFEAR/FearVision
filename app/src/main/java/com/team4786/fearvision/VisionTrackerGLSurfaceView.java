@@ -1,13 +1,5 @@
 package com.team4786.fearvision;
 
-import com.team4786.fearvision.comm.CameraTargetInfo;
-import com.team4786.fearvision.comm.RobotConnection;
-import com.team4786.fearvision.comm.VisionUpdate;
-import com.team4786.fearvision.comm.messages.TargetUpdateMessage;
-
-import org.opencv.android.BetterCamera2Renderer;
-import org.opencv.android.BetterCameraGLSurfaceView;
-
 import android.app.Activity;
 import android.content.Context;
 import android.hardware.camera2.CaptureRequest;
@@ -19,6 +11,14 @@ import android.util.Pair;
 import android.view.SurfaceHolder;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.team4786.fearvision.comm.CameraTargetInfo;
+import com.team4786.fearvision.comm.RobotConnection;
+import com.team4786.fearvision.comm.VisionUpdate;
+import com.team4786.fearvision.comm.messages.TargetUpdateMessage;
+
+import org.opencv.android.BetterCamera2Renderer;
+import org.opencv.android.BetterCameraGLSurfaceView;
 
 import java.util.HashMap;
 
@@ -140,14 +140,15 @@ public class VisionTrackerGLSurfaceView extends BetterCameraGLSurfaceView implem
 
             // Convert to a homogeneous 3d vector with x = 1
             double focalLength;
-            if (DeviceName.getDeviceName().equalsIgnoreCase("Galaxy S7")) { focalLength = 26; }
-            else if (DeviceName.getDeviceName().equalsIgnoreCase("Nexus 6")) { focalLength = 28; }
+            if (DeviceName.getDeviceName().equalsIgnoreCase("Nexus 6")) { focalLength = 28; }
             else { focalLength = 26; }
 
-            double y = (focalLength * 5.85) / (sqrt((target.width * target.width) + (target.height * target.height)));
-            double z = (target.centroidY - kCenterRow) / getFocalLengthPixels();
-            double x = 0.0;
-            double angle = 0.0;
+            double y = (focalLength * 5.85) / target.height;
+            //double z = Math.tan(45 * target.centroidY / 480) * y;
+            double z = target.centroidY;
+            double x = ((target.centroidX - 320) / (target.height)) * 5.85;
+            double angle = target.angle;
+
             Log.i(LOGTAG, "Target at: " + y + ", " + z);
             visionUpdate.addCameraTargetInfo(
                     new CameraTargetInfo(x, y, z, angle));
