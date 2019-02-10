@@ -20,8 +20,8 @@ https://developer.android.com/ndk/downloads/older_releases
 3. You might need to add the JDK to Path and/or JDK path to JAVA_HOME variable
 
 ## Install ADB on the RoboRIO
-Clone https://github.com/NicoletFEAR/RIOdroid
-Unzip "release/RIOdroid v0.1.2.zip" and follow the instructions in the README
+https://github.com/NicoletFEAR/RIOdroid/blob/master/release/RIOdroid%20v0.1.2.zip
+Unzip RIOdroid v0.1.2.zip and follow the instructions in the README
 
 
 ## Having trouble?
