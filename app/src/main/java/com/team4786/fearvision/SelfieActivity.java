@@ -52,6 +52,14 @@ public class SelfieActivity extends Activity implements RobotEventListener {
     }
 
     @Override
+    public void switchCameraFront() {
+    }
+
+    @Override
+    public void switchCameraBack() {
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
         unregisterReceiver(rebr);

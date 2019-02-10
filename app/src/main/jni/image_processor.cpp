@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <stdlib.h>
+#include <math.h>
 
 #include <GLES2/gl2.h>
 #include <EGL/egl.h>
@@ -25,8 +26,6 @@ struct TargetInfo {
   double width;
   double height;
   double angle;
-  double center_centroid_x;
-  double center_centroid_y;
   std::vector<cv::Point> points;
 };
 
@@ -105,10 +104,10 @@ std::vector<TargetInfo> processImpl(int w, int h, int texOut, DisplayMode mode,
 
       // Filter based on size
       // Keep in mind width/height are in imager terms...
-      const double kMinTargetWidth = 20;
-      const double kMaxTargetWidth = 300;
-      const double kMinTargetHeight = 5;
-      const double kMaxTargetHeight = 600;
+      const double kMinTargetWidth = 0;
+      const double kMaxTargetWidth = 1000;
+      const double kMinTargetHeight = 0;
+      const double kMaxTargetHeight = 1000;
       if (target.width < kMinTargetWidth || target.width > kMaxTargetWidth ||
           target.height < kMinTargetHeight ||
           target.height > kMaxTargetHeight) {
@@ -119,8 +118,8 @@ std::vector<TargetInfo> processImpl(int w, int h, int texOut, DisplayMode mode,
       }
 
       // Filter based on shape
-      const double kMaxWideness = 10.0;
-      const double kMinWideness = 0.5;
+      const double kMaxWideness = 20;
+      const double kMinWideness = 0.05;
       double wideness = target.width / target.height;
       if (wideness < kMinWideness || wideness > kMaxWideness) {
         LOGD("Rejecting target due to shape : %.2lf", wideness);
@@ -129,7 +128,7 @@ std::vector<TargetInfo> processImpl(int w, int h, int texOut, DisplayMode mode,
       }
 
       //Filter based on fullness
-      const double kMinFullness = .45;
+      const double kMinFullness = .9;
       const double kMaxFullness = 1;
       double original_contour_area = cv::contourArea(convex_contour);
       double area = target.width * target.height * 1.0;
@@ -145,8 +144,7 @@ std::vector<TargetInfo> processImpl(int w, int h, int texOut, DisplayMode mode,
         LOGD("target angle : %.2lf", target.angle);
 
       // We found a target
-      LOGD("Found target at %.2lf, %.2lf %.2lf, %.2lf, angle %.2lf",
-           target.centroid_x, target.centroid_y, target.width, target.height, target.angle);
+      LOGD("Found target at %.2lf, %.2lf %.2lf, %.2lf, angle %.2lf", target.centroid_x, target.centroid_y, target.width, target.height, target.angle);
       accepted_targets.push_back(std::move(target));
     }
   }
@@ -155,29 +153,62 @@ std::vector<TargetInfo> processImpl(int w, int h, int texOut, DisplayMode mode,
 
 
 
-  const double kMaxOffset = 600;
-  const double kMinOffset = 5;
+  const double kMaxOffset = 50;
+  const double kMinOffset = 0;
   bool found = false;
   for (int i = 0; !found && i < accepted_targets.size(); i++) {
-    for (int j = 0; !found && j < accepted_targets.size(); j++) {
+    for (int j = i; !found && j < accepted_targets.size(); j++) {
       if (i == j) {
         continue;
       }
       TargetInfo targetI = accepted_targets[i];
       TargetInfo targetJ = accepted_targets[j];
-      double offset = abs(targetI.centroid_x - targetJ.centroid_x);
-      if (offset < kMaxOffset) {
+      double vertOffset = abs(targetI.centroid_y - targetJ.centroid_y);
+      if (vertOffset < kMaxOffset) {
         TargetInfo leftTarget = targetI.centroid_x < targetJ.centroid_x ? targetI : targetJ;
-        TargetInfo rightTarget = targetI.centroid_x > targetJ.centroid_x ? targetI : targetJ;
+        TargetInfo rightTarget = targetI.centroid_x < targetJ.centroid_x ? targetJ : targetI;
+        if (abs(leftTarget.angle) < 45 && abs(rightTarget.angle) > 45) {
+          TargetInfo combinedTarget;
+          combinedTarget.centroid_x = (leftTarget.centroid_x + rightTarget.centroid_x)/2;
+          combinedTarget.centroid_y = (leftTarget.centroid_y + rightTarget.centroid_y)/2;
+          combinedTarget.width = rightTarget.centroid_x - leftTarget.centroid_x;
+          combinedTarget.height = (sqrt(leftTarget.width * leftTarget.width + leftTarget.height + leftTarget.height) + sqrt(rightTarget.width * rightTarget.width + rightTarget.height + rightTarget.height)) / 2;
+          // combinedTarget.angle = 0; // calculated later when sending to RIO
+          /*
+          if (leftTarget.width > rightTarget.width) { // must be a left turn
+            // multiply by distance
+            // big divided by little
+            combinedTarget.angle =  -(((leftTarget.height * leftTarget.width) / (rightTarget.height * rightTarget.width)) - 10) ;
+          } else {
+            // must be a right turn
+            combinedTarget.angle = ((rightTarget.height * rightTarget.width) / (leftTarget.height * leftTarget.width)) - 10;
+            //combinedTarget.angle = (-2);
+          } */
+          combinedTarget.angle = (log(leftTarget.width * leftTarget.height) - log(rightTarget.width * rightTarget.height)) / (log(2));
+          //combinedTarget.angle = combinedTarget.angle * 1;
+          //if (abs(combinedTarget.angle) < 11) {
+          //  combinedTarget.angle = 111;
+          //}
+          targets.push_back(std::move(combinedTarget));
+          //targets.push_back(std::move(rightTarget));
 
-        leftTarget.center_centroid_x = (rightTarget.centroid_x - leftTarget.centroid_x) / 2.0;
-        leftTarget.center_centroid_y = (rightTarget.centroid_y - leftTarget.centroid_y) / 2.0;
+          /*
+          double centroid_x;
+            double centroid_y;
+            double width;
+            double height;
+            double angle;
+          */
 
-        if (leftTarget.height > rightTarget.height) {
-          targets.push_back(std::move(leftTarget));
           found = true;
           break;
+        } else {
+          rejected_targets.push_back(std::move(targetI));
+          rejected_targets.push_back(std::move(targetJ));
         }
+      } else {
+        rejected_targets.push_back(std::move(targetI));
+        rejected_targets.push_back(std::move(targetJ));
       }
     }
   }
@@ -197,10 +228,6 @@ std::vector<TargetInfo> processImpl(int w, int h, int texOut, DisplayMode mode,
       cv::polylines(vis, target.points, true, cv::Scalar(0, 112, 255), 3);
       cv::circle(vis, cv::Point(target.centroid_x, target.centroid_y), 4,
                  cv::Scalar(255, 50, 255), 3);
-      if (target.center_centroid_x > 0.0 and target.center_centroid_z > 0.0){
-        cv::circle(vis, cv::Point(target.center_centroid_x, target.center_centroid_y), 4,
-                       cv::Scalar(255, 50, 255), 3);
-      }
     }
   }
   if (mode == DISP_MODE_TARGETS_PLUS) {
@@ -228,6 +255,7 @@ static jfieldID sCentroidXField;
 static jfieldID sCentroidYField;
 static jfieldID sWidthField;
 static jfieldID sHeightField;
+static jfieldID sAngleField;
 
 static void ensureJniRegistered(JNIEnv *env) {
   if (sFieldsRegistered) {
@@ -247,6 +275,7 @@ static void ensureJniRegistered(JNIEnv *env) {
   sCentroidYField = env->GetFieldID(targetClass, "centroidY", "D");
   sWidthField = env->GetFieldID(targetClass, "width", "D");
   sHeightField = env->GetFieldID(targetClass, "height", "D");
+  sAngleField = env->GetFieldID(targetClass, "angle", "D");
 }
 
 extern "C" void processFrame(JNIEnv *env, int tex1, int tex2, int w, int h,
@@ -256,6 +285,9 @@ extern "C" void processFrame(JNIEnv *env, int tex1, int tex2, int w, int h,
   auto targets = processImpl(w, h, tex2, static_cast<DisplayMode>(mode), h_min,
                              h_max, s_min, s_max, v_min, v_max);
   int numTargets = targets.size();
+  //double center_x = ( (targets[numTargets - 1]).centroid_x + (targets[numTargets - 2]).centroid_x)/2;
+
+       // LOGD("center_x : %.2lf", center_x);
   ensureJniRegistered(env);
   env->SetIntField(destTargetInfo, sNumTargetsField, numTargets);
   if (numTargets == 0) {
@@ -266,11 +298,10 @@ extern "C" void processFrame(JNIEnv *env, int tex1, int tex2, int w, int h,
   for (int i = 0; i < std::min(numTargets, 3); ++i) {
     jobject targetObject = env->GetObjectArrayElement(targetsArray, i);
     const auto &target = targets[i];
-    if (target.center_centroid_x > 0.0 and target.center_centroid_y > 0.0){
-        env->SetDoubleField(targetObject, sCentroidXField, target.center_centroid_x);
-        env->SetDoubleField(targetObject, sCentroidYField, target.center_centroid_y);
-        env->SetDoubleField(targetObject, sWidthField, target.width); // only applies to the left target
-        env->SetDoubleField(targetObject, sHeightField, target.height); // only applies to the left target
-    }
+    env->SetDoubleField(targetObject, sCentroidXField, target.centroid_x);
+    env->SetDoubleField(targetObject, sCentroidYField, target.centroid_y);
+    env->SetDoubleField(targetObject, sWidthField, target.width);
+    env->SetDoubleField(targetObject, sHeightField, target.height);
+    env->SetDoubleField(targetObject, sAngleField, target.angle);
   }
 }

@@ -457,9 +457,11 @@ public abstract class BetterCameraGLRendererBase implements GLSurfaceView.Render
     }
 
     public void setCameraIndex(int cameraIndex) {
-        disableView();
-        mCameraIndex = cameraIndex;
-        enableView();
+        if (mCameraIndex != cameraIndex) {
+            disableView();
+            mCameraIndex = cameraIndex;
+            enableView();
+        }
     }
 
     public void setMaxCameraPreviewSize(int maxWidth, int maxHeight) {

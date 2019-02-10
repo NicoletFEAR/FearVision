@@ -72,6 +72,10 @@ public class BetterCameraGLSurfaceView extends GLSurfaceView {
         return mTexListener;
     }
 
+    public int getCameraIndex(){
+        return mRenderer.mCameraIndex;
+    }
+
     public void setCameraIndex(int cameraIndex) {
         mRenderer.setCameraIndex(cameraIndex);
     }

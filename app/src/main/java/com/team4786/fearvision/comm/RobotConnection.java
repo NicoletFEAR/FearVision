@@ -67,10 +67,10 @@ public class RobotConnection {
                 broadcastShotTaken();
             }
             if ("camera_mode".equals(message.getType())) {
-                if ("vision".equals(message.getMessage())) {
-                    broadcastWantVisionMode();
-                } else if ("intake".equals(message.getMessage())) {
-                    broadcastWantIntakeMode();
+                if ("front".equals(message.getMessage())) {
+                    broadcastCameraFront();
+                } else if ("back".equals(message.getMessage())) {
+                    broadcastCameraBack();
                 }
             }
 
@@ -268,6 +268,16 @@ public class RobotConnection {
 
     public void broadcastRobotDisconnected() {
         Intent i = new Intent(RobotConnectionStatusBroadcastReceiver.ACTION_ROBOT_DISCONNECTED);
+        m_context.sendBroadcast(i);
+    }
+
+    public void broadcastCameraFront() {
+        Intent i = new Intent(RobotEventBroadcastReceiver.ACTION_CAMERA_FRONT);
+        m_context.sendBroadcast(i);
+    }
+
+    public void broadcastCameraBack() {
+        Intent i = new Intent(RobotEventBroadcastReceiver.ACTION_CAMERA_BACK);
         m_context.sendBroadcast(i);
     }
 }
