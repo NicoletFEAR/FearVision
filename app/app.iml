@@ -100,5 +100,7 @@
     <orderEntry type="library" exported="" name="Gradle: org.florescu.android.rangeseekbar:rangeseekbar-library:0.3.0@aar" level="project" />
     <orderEntry type="module" module-name="openCVLibrary310" exported="" />
     <orderEntry type="module" module-name="openCVLibrary310" exported="" />
+    <orderEntry type="module" module-name="openCVLibrary310" exported="" />
+    <orderEntry type="module" module-name="openCVLibrary310" exported="" />
   </component>
 </module>

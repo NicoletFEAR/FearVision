@@ -2,6 +2,7 @@ package com.team4786.fearvision;
 
 import android.app.Activity;
 import android.content.Context;
+import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.os.Handler;
 import android.os.Looper;
@@ -140,8 +141,11 @@ public class VisionTrackerGLSurfaceView extends BetterCameraGLSurfaceView implem
 
             // Convert to a homogeneous 3d vector with x = 1
             double focalLength;
-            if (DeviceName.getDeviceName().equalsIgnoreCase("Nexus 6")) { focalLength = 28; }
-            else { focalLength = 26; }
+            if (this.getCameraIndex() == 98) {
+                focalLength = 21;
+            } else {
+                focalLength = 26;
+            }
 
             double y = (focalLength * 5.85) / target.height;
             //double z = Math.tan(45 * target.centroidY / 480) * y;
