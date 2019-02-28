@@ -184,7 +184,7 @@ std::vector<TargetInfo> processImpl(int w, int h, int texOut, DisplayMode mode,
             combinedTarget.angle = ((rightTarget.height * rightTarget.width) / (leftTarget.height * leftTarget.width)) - 10;
             //combinedTarget.angle = (-2);
           } */
-          combinedTarget.angle = (log(leftTarget.width * leftTarget.height) - log(rightTarget.width * rightTarget.height)) / (log(2));
+          combinedTarget.angle = ((log(leftTarget.width * leftTarget.height) - log(rightTarget.width * rightTarget.height)) / (log(2))) / combinedTarget.height;
           //combinedTarget.angle = combinedTarget.angle * 1;
           //if (abs(combinedTarget.angle) < 11) {
           //  combinedTarget.angle = 111;
